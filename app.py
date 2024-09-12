@@ -7,6 +7,7 @@ from core import (
     save_graph_to_csv,
     visualize_graph,
     visualize_graph_hierarchical_plotly,
+    visualize_graph_path,
 )
 
 st.title("Hierarchical BOM Synthesizer")
@@ -92,6 +93,15 @@ def main():
         st.download_button("Download Nodes", f)
     with open("edges.csv") as f:
         st.download_button("Download Edges", f)
+
+    st.subheader("Path Visualization")
+    # use select box to select source and target node
+    source = st.selectbox("Source Node", list(G.nodes))
+    target = st.selectbox("Target Node", list(G.nodes))
+    if st.button("Visualize Path"):
+        fig_path = visualize_graph_path(G, source, target)
+        if fig_path is not None:
+            st.plotly_chart(fig_path, use_container_width=True)
 
 
 if __name__ == "__main__":

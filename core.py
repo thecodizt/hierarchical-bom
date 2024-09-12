@@ -138,47 +138,71 @@ def save_graph_to_csv(G: nx.DiGraph, nodes_filename: str, edges_filename: str) -
 
 def visualize_graph(G: nx.DiGraph) -> None:
     """
-    Visualize the graph and save it as an image using plotly graph objects without hierarchical layout.
+    Visualize the graph and save it as an image using plotly graph objects without hierarchical layout with colors.
 
     :param G: NetworkX DiGraph object
     :param filename: Name of the file to save the visualization
     """
-    pos = nx.spring_layout(G)
+    # Create a Plotly figure
     fig = go.Figure()
 
+    # Get node positions using spring layout
+    pos = nx.spring_layout(G)
+
+    # Add edges as lines
+    edge_x = []
+    edge_y = []
     for edge in G.edges():
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
-        fig.add_trace(
-            go.Scatter(
-                x=[x0, x1],
-                y=[y0, y1],
-                mode="lines",
-                line=dict(width=0.5, color="gray"),
-                hoverinfo="none",
-            )
-        )
+        edge_x.extend([x0, x1, None])
+        edge_y.extend([y0, y1, None])
 
-    node_x = [pos[node][0] for node in G.nodes()]
-    node_y = [pos[node][1] for node in G.nodes()]
-
-    fig.add_trace(
-        go.Scatter(
-            x=node_x,
-            y=node_y,
-            mode="markers",
-            marker=dict(size=10, color="blue"),
-            hoverinfo="text",
-            text=[
-                f"{node}<br>Layer: {G.nodes[node]['layer_name']}" for node in G.nodes()
-            ],
-        )
+    edge_trace = go.Scatter(
+        x=edge_x,
+        y=edge_y,
+        line=dict(width=0.5, color="#888"),
+        hoverinfo="none",
+        mode="lines",
     )
 
+    # Add nodes as markers
+    node_x = []
+    node_y = []
+    node_colors = []
+    node_text = []
+    for node, data in G.nodes(data=True):
+        x, y = pos[node]
+        node_x.append(x)
+        node_y.append(y)
+        node_colors.append(
+            data.get("color", "#1f78b4")
+        )  # Use node color from attributes
+        node_text.append(f"{node}<br>Layer: {data['layer_name']}")
+
+    node_trace = go.Scatter(
+        x=node_x,
+        y=node_y,
+        mode="markers",
+        hoverinfo="text",
+        marker=dict(color=node_colors, size=10, line_width=2),
+        text=node_text,
+    )
+
+    # Create the layout
+    fig.add_trace(edge_trace)
+    fig.add_trace(node_trace)
     fig.update_layout(
+        title="Graph Visualization",
+        titlefont_size=16,
         showlegend=False,
         hovermode="closest",
         margin=dict(b=20, l=5, r=5, t=40),
+        annotations=[
+            dict(
+                text="", showarrow=False, xref="paper", yref="paper", x=0.005, y=-0.002
+            )
+        ],
         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
     )
@@ -323,5 +347,87 @@ def visualize_graph_hierarchical_plotly(G: nx.DiGraph) -> go.Figure:
         fig.add_annotation(
             x=min(node_x) - 1, y=y, text=layer_name, showarrow=False, xanchor="right"
         )
+
+    return fig
+
+
+import networkx as nx
+import plotly.graph_objs as go
+import streamlit as st
+
+
+def visualize_graph_path(G: nx.DiGraph, source: str, target: str) -> go.Figure:
+    """
+    Visualize the graph with a path highlighted from the selected source to target.
+
+    :param G: NetworkX DiGraph object
+    :param source: Source node
+    :param target: Target node
+    :return: Plotly Figure object
+    """
+
+    # Check if path exists
+    if not nx.has_path(G, source, target):
+        st.warning("No path found between the selected source and target.")
+        return None
+
+    # Find the shortest path
+    path = nx.shortest_path(G, source, target)
+
+    # Create a copy of the graph
+    G_path = G.copy()
+
+    # Remove nodes not in the path
+    nodes_to_remove = set(G_path.nodes()) - set(path)
+    G_path.remove_nodes_from(nodes_to_remove)
+
+    # Create a layout for the path
+    pos = nx.spring_layout(G_path)
+
+    # Create edge trace for the path
+    edge_x, edge_y = [], []
+    for edge in G_path.edges():
+        x0, y0 = pos[edge[0]]
+        x1, y1 = pos[edge[1]]
+        edge_x.extend([x0, x1, None])
+        edge_y.extend([y0, y1, None])
+
+    edge_trace = go.Scatter(
+        x=edge_x,
+        y=edge_y,
+        line=dict(width=2, color="red"),
+        hoverinfo="none",
+        mode="lines",
+    )
+
+    # Create node trace for the path
+    node_x = [pos[node][0] for node in G_path.nodes()]
+    node_y = [pos[node][1] for node in G_path.nodes()]
+
+    node_trace = go.Scatter(
+        x=node_x,
+        y=node_y,
+        mode="markers+text",
+        marker=dict(size=20, color="red"),
+        text=list(G_path.nodes()),
+        textposition="top center",
+        hoverinfo="text",
+        hovertext=[
+            f"{node}<br>Layer: {G.nodes[node]['layer_name']}" for node in G_path.nodes()
+        ],
+    )
+
+    # Create the layout
+    layout = go.Layout(
+        title=f"Path from {source} to {target}: {' -> '.join(path)}",
+        showlegend=False,
+        hovermode="closest",
+        margin=dict(b=20, l=5, r=5, t=40),
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+    )
+
+    # Create the figure
+    fig = go.Figure(data=[edge_trace, node_trace], layout=layout)
 
     return fig
