@@ -136,38 +136,54 @@ def save_graph_to_csv(G: nx.DiGraph, nodes_filename: str, edges_filename: str) -
     edges_df.to_csv(edges_filename, index=False)
 
 
-def visualize_graph(G: nx.DiGraph, filename: str) -> None:
+def visualize_graph(G: nx.DiGraph) -> None:
     """
-    Visualize the graph and save it as an image.
+    Visualize the graph and save it as an image using plotly graph objects without hierarchical layout.
 
     :param G: NetworkX DiGraph object
     :param filename: Name of the file to save the visualization
     """
     pos = nx.spring_layout(G)
-    plt.figure(figsize=(12, 8))
-    nx.draw(
-        G,
-        pos,
-        with_labels=True,
-        node_color="lightblue",
-        node_size=500,
-        arrowsize=20,
-        width=0.5,
+    fig = go.Figure()
+
+    for edge in G.edges():
+        x0, y0 = pos[edge[0]]
+        x1, y1 = pos[edge[1]]
+        fig.add_trace(
+            go.Scatter(
+                x=[x0, x1],
+                y=[y0, y1],
+                mode="lines",
+                line=dict(width=0.5, color="gray"),
+                hoverinfo="none",
+            )
+        )
+
+    node_x = [pos[node][0] for node in G.nodes()]
+    node_y = [pos[node][1] for node in G.nodes()]
+
+    fig.add_trace(
+        go.Scatter(
+            x=node_x,
+            y=node_y,
+            mode="markers",
+            marker=dict(size=10, color="blue"),
+            hoverinfo="text",
+            text=[
+                f"{node}<br>Layer: {G.nodes[node]['layer_name']}" for node in G.nodes()
+            ],
+        )
     )
 
-    # Add layer information to the visualization
-    layer_labels = nx.get_node_attributes(G, "layer")
-    nx.draw_networkx_labels(
-        G,
-        pos,
-        labels={node: f"{node}\n(L{layer})" for node, layer in layer_labels.items()},
+    fig.update_layout(
+        showlegend=False,
+        hovermode="closest",
+        margin=dict(b=20, l=5, r=5, t=40),
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
     )
 
-    plt.title("Synthesized Network Visualization")
-    plt.axis("off")
-    plt.tight_layout()
-    plt.savefig(filename, format="png", dpi=300, bbox_inches="tight")
-    plt.close()
+    return fig
 
 
 def minimize_crossings(G, layers):
@@ -272,7 +288,6 @@ def visualize_graph_hierarchical_plotly(G: nx.DiGraph) -> go.Figure:
 
     # Create the layout
     layout = go.Layout(
-        title="Interactive Hierarchical Network Visualization",
         showlegend=False,
         hovermode="closest",
         margin=dict(b=20, l=5, r=5, t=40),

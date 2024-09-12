@@ -70,14 +70,15 @@ def main():
     save_graph_to_csv(G, "nodes.csv", "edges.csv")
 
     # Visualize the graph
-    visualize_graph(G, "graph_visualization.png")
+    fig1 = visualize_graph(G)
 
     fig = visualize_graph_hierarchical_plotly(G)
 
     st.success("Graph synthesized successfully!")
 
     st.subheader("Graph Visualization")
-    st.image("graph_visualization.png")
+    st.plotly_chart(fig1, use_container_width=True)
+
     st.subheader("Hierarchical Graph Visualization")
     # st.image("graph_visualization_hierarchical.png")
     st.plotly_chart(fig, use_container_width=True)
