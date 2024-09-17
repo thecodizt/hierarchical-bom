@@ -8,6 +8,10 @@ from core import (
     visualize_graph,
     visualize_graph_hierarchical_plotly,
     visualize_graph_path,
+    save_to_graphml,
+    get_all_parents,
+    get_all_children,
+    visualize_subgraph,
 )
 
 st.title("Hierarchical BOM Synthesizer")
@@ -26,14 +30,17 @@ st.write(
 
 
 def inputs():
-    total_nodes = st.number_input("Total Nodes", min_value=1, value=100)
-    total_layers = st.number_input("Total Layers", min_value=1, value=12)
-    # distribution = st.selectbox(
-    #     "Distribution", ["uniform", "normal", "pos_exp", "neg_exp"]
-    # )
+    total_nodes = st.number_input(
+        "Total Nodes", min_value=1, value=100, key="total_nodes"
+    )
+    total_layers = st.number_input(
+        "Total Layers", min_value=1, value=12, key="total_layers"
+    )
     distribution = "pos_exp"
-    clear_cut_layer = st.number_input("Clear Cut Layer", min_value=1, value=5)
-    layer_names = st.text_input("Layer Names (comma-separated)")
+    clear_cut_layer = st.number_input(
+        "Clear Cut Layer", min_value=1, value=5, key="clear_cut_layer"
+    )
+    layer_names = st.text_input("Layer Names (comma-separated)", key="layer_names")
     return total_nodes, total_layers, distribution, clear_cut_layer, layer_names
 
 
@@ -102,6 +109,33 @@ def main():
         fig_path = visualize_graph_path(G, source, target)
         if fig_path is not None:
             st.plotly_chart(fig_path, use_container_width=True)
+
+    st.subheader("GraphML Output")
+    save_to_graphml(G, "synthesized_graph.graphml")
+    with open("synthesized_graph.graphml") as f:
+        st.download_button("Download GraphML", f)
+
+    st.subheader("Parent Nodes Visualization")
+    selected_node_parents = st.selectbox(
+        "Select a node to view its parents", list(G.nodes), key="parent_select"
+    )
+    if st.button("Visualize Parents", key="visualize_parents"):
+        parents = get_all_parents(G, selected_node_parents)
+        st.write(f"All predecessors of {selected_node_parents}:")
+        st.write(parents)
+        fig_parents = visualize_subgraph(G, parents, selected_node_parents)
+        st.plotly_chart(fig_parents, use_container_width=True)
+
+    st.subheader("Child Nodes Visualization")
+    selected_node_children = st.selectbox(
+        "Select a node to view its children", list(G.nodes), key="child_select"
+    )
+    if st.button("Visualize Children", key="visualize_children"):
+        children = get_all_children(G, selected_node_children)
+        st.write(f"All descendants of {selected_node_children}:")
+        st.write(children)
+        fig_children = visualize_subgraph(G, children, selected_node_children)
+        st.plotly_chart(fig_children, use_container_width=True)
 
 
 if __name__ == "__main__":

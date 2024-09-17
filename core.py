@@ -431,3 +431,110 @@ def visualize_graph_path(G: nx.DiGraph, source: str, target: str) -> go.Figure:
     fig = go.Figure(data=[edge_trace, node_trace], layout=layout)
 
     return fig
+
+
+def save_to_graphml(G: nx.DiGraph, filename: str) -> None:
+    """
+    Save the graph to a GraphML file.
+
+    :param G: NetworkX DiGraph object
+    :param filename: Name of the file to save the GraphML data
+    """
+    nx.write_graphml(G, filename)
+
+
+def get_all_parents(G: nx.DiGraph, node: str) -> list:
+    """
+    Get all predecessor nodes of a given node.
+
+    :param G: NetworkX DiGraph object
+    :param node: Node to find predecessors for
+    :return: List of predecessor nodes
+    """
+    return list(nx.ancestors(G, node))
+
+
+def get_all_children(G: nx.DiGraph, node: str) -> list:
+    """
+    Get all descendant nodes of a given node.
+
+    :param G: NetworkX DiGraph object
+    :param node: Node to find descendants for
+    :return: List of descendant nodes
+    """
+    return list(nx.descendants(G, node))
+
+
+def visualize_subgraph(G: nx.DiGraph, nodes: list, highlight_node: str) -> go.Figure:
+    """
+    Visualize a subgraph containing the given nodes.
+
+    :param G: NetworkX DiGraph object
+    :param nodes: List of nodes to include in the subgraph
+    :param highlight_node: Node to highlight
+    :return: Plotly Figure object
+    """
+    subgraph = G.subgraph(nodes + [highlight_node])
+    pos = nx.spring_layout(subgraph)
+
+    edge_x, edge_y = [], []
+    for edge in subgraph.edges():
+        x0, y0 = pos[edge[0]]
+        x1, y1 = pos[edge[1]]
+        edge_x.extend([x0, x1, None])
+        edge_y.extend([y0, y1, None])
+
+    edge_trace = go.Scatter(
+        x=edge_x,
+        y=edge_y,
+        line=dict(width=0.5, color="#888"),
+        hoverinfo="none",
+        mode="lines",
+    )
+
+    node_x, node_y = [], []
+    for node in subgraph.nodes():
+        x, y = pos[node]
+        node_x.append(x)
+        node_y.append(y)
+
+    node_trace = go.Scatter(
+        x=node_x,
+        y=node_y,
+        mode="markers+text",
+        hoverinfo="text",
+        marker=dict(
+            showscale=False,
+            colorscale="YlGnBu",
+            size=10,
+            color=[],
+            line_width=2,
+        ),
+        text=[],
+        textposition="top center",
+    )
+
+    node_colors = []
+    node_text = []
+    for node in subgraph.nodes():
+        if node == highlight_node:
+            node_colors.append("red")
+        else:
+            node_colors.append(subgraph.nodes[node].get("color", "#1f78b4"))
+        node_text.append(f"{node}<br>Layer: {subgraph.nodes[node]['layer_name']}")
+
+    node_trace.marker.color = node_colors
+    node_trace.text = node_text
+
+    fig = go.Figure(
+        data=[edge_trace, node_trace],
+        layout=go.Layout(
+            showlegend=False,
+            hovermode="closest",
+            margin=dict(b=20, l=5, r=5, t=40),
+            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        ),
+    )
+
+    return fig
