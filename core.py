@@ -14,6 +14,8 @@ def synthesize_graph(
     distribution: str,
     clear_cut_layer: int,
     layer_names: list = None,
+    num_properties: int = 1,
+    property_names: list = None,
 ) -> nx.DiGraph:
     """
     Synthesize a directed graph based on given parameters.
@@ -23,6 +25,8 @@ def synthesize_graph(
     :param distribution: Distribution of nodes across layers ('uniform', 'normal', 'pos_exp', 'neg_exp')
     :param clear_cut_layer: Layer number below which there's only one parent per node
     :param layer_names: Optional list of layer names. If provided, should have at least one entry.
+    :param num_properties: Number of node properties to generate
+    :param property_names: Optional list of property names. If provided, should have at least one entry.
     :return: NetworkX DiGraph object
     """
     G = nx.DiGraph()
@@ -67,7 +71,15 @@ def synthesize_graph(
             [f"{base_name}{i+1}" for i in range(len(layer_names), total_layers)]
         )
 
-    # Create nodes with new naming convention
+    # Handle property names
+    if property_names is None:
+        property_names = [f"property_{i+1}" for i in range(num_properties)]
+    elif len(property_names) < num_properties:
+        property_names.extend(
+            [f"property_{i+1}" for i in range(len(property_names), num_properties)]
+        )
+
+    # Create nodes with new naming convention and properties
     node_id = 0
     for layer, num_nodes in enumerate(nodes_per_layer):
         layer_name = layer_names[layer]
@@ -76,8 +88,16 @@ def synthesize_graph(
                 node_name = f"{layer_name} {node_in_layer + 1}"
             else:
                 node_name = f"{layer_name} {layer + 1} {node_in_layer + 1}"
+
+            # Generate random property values
+            properties = {name: np.random.uniform(0, 1) for name in property_names}
+
             G.add_node(
-                node_name, layer=layer, color=colors[layer], layer_name=layer_name
+                node_name,
+                layer=layer,
+                color=colors[layer],
+                layer_name=layer_name,
+                **properties,
             )
             node_id += 1
 
@@ -258,11 +278,14 @@ def create_improved_hierarchical_layout(G: nx.DiGraph) -> dict:
     return pos
 
 
-def visualize_graph_hierarchical_plotly(G: nx.DiGraph) -> go.Figure:
+def visualize_graph_hierarchical_plotly(
+    G: nx.DiGraph, size_property: str = None
+) -> go.Figure:
     """
     Visualize the graph with an improved hierarchical layout using Plotly.
 
     :param G: NetworkX DiGraph object
+    :param size_property: Name of the property to use for node sizing (optional)
     :return: Plotly Figure object
     """
     pos = create_improved_hierarchical_layout(G)
@@ -290,25 +313,53 @@ def visualize_graph_hierarchical_plotly(G: nx.DiGraph) -> go.Figure:
     )
 
     # Create node trace
+    node_x = []
+    node_y = []
+    for node in G.nodes():
+        x, y = pos[node]
+        node_x.append(x)
+        node_y.append(y)
+
     node_trace = go.Scatter(
         x=node_x,
         y=node_y,
         mode="markers+text",
         hoverinfo="text",
         marker=dict(
-            showscale=False, colorscale="YlGnBu", size=10, color=[], line_width=2
+            showscale=True,
+            colorscale="YlGnBu",
+            reversescale=True,
+            color=[],
+            size=[],
+            colorbar=dict(
+                thickness=15,
+                title="Node Connections",
+                xanchor="left",
+                titleside="right",
+            ),
+            line_width=2,
         ),
     )
 
-    # Color node points and add hover text
-    node_colors = []
+    # Color node points by the number of connections and adjust size based on property
+    node_adjacencies = []
     node_text = []
-    for node, data in G.nodes(data=True):
-        node_colors.append(data.get("color", "#1f78b4"))
-        node_text.append(f"{node}<br>Layer: {data['layer_name']}")
+    node_sizes = []
+    for node, adjacencies in G.adjacency():
+        node_adjacencies.append(len(adjacencies))
+        node_text.append(f"{node}<br># of connections: {len(adjacencies)}")
 
-    node_trace.marker.color = node_colors
+        if size_property:
+            size = G.nodes[node].get(size_property, 10) * 20  # Scale the property value
+            node_sizes.append(size)
+
+    node_trace.marker.color = node_adjacencies
     node_trace.text = node_text
+
+    if size_property:
+        node_trace.marker.size = node_sizes
+    else:
+        node_trace.marker.size = 10
 
     # Create the layout
     layout = go.Layout(
@@ -591,3 +642,24 @@ def visualize_subgraph(G: nx.DiGraph, nodes: list, highlight_node: str) -> go.Fi
     )
 
     return fig
+
+
+def analyze_node_properties(G: nx.DiGraph, property_name: str) -> dict:
+    """
+    Analyze the graph based on a specific node property.
+
+    :param G: NetworkX DiGraph object
+    :param property_name: Name of the property to analyze
+    :return: Dictionary containing analysis results
+    """
+    property_values = nx.get_node_attributes(G, property_name)
+
+    analysis = {
+        "min": min(property_values.values()),
+        "max": max(property_values.values()),
+        "mean": np.mean(list(property_values.values())),
+        "median": np.median(list(property_values.values())),
+        "std": np.std(list(property_values.values())),
+    }
+
+    return analysis

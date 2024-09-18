@@ -1,4 +1,5 @@
 import streamlit as st
+import numpy as np
 import csv
 import json
 import networkx as nx
@@ -14,6 +15,7 @@ from core import (
     get_all_children,
     visualize_subgraph,
     find_critical_path,
+    analyze_node_properties,
 )
 
 st.title("Hierarchical BOM Synthesizer")
@@ -49,29 +51,27 @@ def inputs():
 def main():
     total_nodes, total_layers, distribution, clear_cut_layer, layer_names = inputs()
 
-    # Synthesize the graph
-    G = synthesize_graph(
-        total_nodes=total_nodes,
-        total_layers=total_layers,
-        distribution=distribution,
-        clear_cut_layer=clear_cut_layer,
-        layer_names=layer_names.split(",") if layer_names else None,
+    # Add input for custom node properties
+    num_properties = st.sidebar.number_input(
+        "Number of node properties", min_value=1, max_value=5, value=1
     )
+    property_names = []
+    for i in range(num_properties):
+        prop_name = st.sidebar.text_input(
+            f"Property {i+1} name", value=f"property_{i+1}"
+        )
+        property_names.append(prop_name)
 
-    # G = synthesize_graph(
-    #     total_nodes=100,
-    #     total_layers=12,
-    #     distribution="pos_exp",
-    #     clear_cut_layer=5,
-    #     layer_names=[
-    #         "Organization",
-    #         "Business Group",
-    #         "Product Family",
-    #         "Product Offering",
-    #         "Modules",
-    #         "Parts",
-    #     ],
-    # )
+    # Generate the graph
+    G = synthesize_graph(
+        total_nodes,
+        total_layers,
+        distribution,
+        clear_cut_layer,
+        layer_names.split(",") if layer_names else None,
+        num_properties,
+        property_names,
+    )
 
     # Save to JSON
     save_graph_to_json(G, "synthesized_graph.json")
@@ -129,6 +129,60 @@ def main():
         else:
             st.warning("No path exists between the selected nodes.")
 
+    # Add property-based analysis
+    st.subheader("Node Property Analysis")
+    selected_property = st.selectbox("Select a property to analyze", property_names)
+    analysis_results = analyze_node_properties(G, selected_property)
+    st.write(analysis_results)
+
+    # Add property-based visualization
+    st.subheader("Property-based Visualization")
+    size_property = st.selectbox(
+        "Select a property for node sizing", ["None"] + property_names
+    )
+    if size_property == "None":
+        size_property = None
+    fig_property = visualize_graph_hierarchical_plotly(G, size_property)
+    st.plotly_chart(fig_property, use_container_width=True)
+
+    st.subheader("Parent Nodes Visualization")
+    selected_node_parents = st.selectbox(
+        "Select a node to view its parents", list(G.nodes), key="parent_select"
+    )
+    if st.button("Visualize Parents", key="visualize_parents"):
+        parents = get_all_parents(G, selected_node_parents)
+        st.write(f"All predecessors of {selected_node_parents}:")
+        st.write(parents)
+        fig_parents = visualize_subgraph(G, parents, selected_node_parents)
+        st.plotly_chart(fig_parents, use_container_width=True)
+
+        # Add property statistics for parents
+        st.write("Property statistics for parent nodes:")
+        for prop in property_names:
+            parent_values = [G.nodes[node][prop] for node in parents]
+            st.write(
+                f"{prop}: Mean = {np.mean(parent_values):.2f}, Std = {np.std(parent_values):.2f}"
+            )
+
+    st.subheader("Child Nodes Visualization")
+    selected_node_children = st.selectbox(
+        "Select a node to view its children", list(G.nodes), key="child_select"
+    )
+    if st.button("Visualize Children", key="visualize_children"):
+        children = get_all_children(G, selected_node_children)
+        st.write(f"All descendants of {selected_node_children}:")
+        st.write(children)
+        fig_children = visualize_subgraph(G, children, selected_node_children)
+        st.plotly_chart(fig_children, use_container_width=True)
+
+        # Add property statistics for children
+        st.write("Property statistics for child nodes:")
+        for prop in property_names:
+            child_values = [G.nodes[node][prop] for node in children]
+            st.write(
+                f"{prop}: Mean = {np.mean(child_values):.2f}, Std = {np.std(child_values):.2f}"
+            )
+
     # Add this new section for critical path analysis
     st.subheader("Critical Path Analysis")
     if st.button("Find Critical Path"):
@@ -148,28 +202,6 @@ def main():
     save_to_graphml(G, "synthesized_graph.graphml")
     with open("synthesized_graph.graphml") as f:
         st.download_button("Download GraphML", f)
-
-    st.subheader("Parent Nodes Visualization")
-    selected_node_parents = st.selectbox(
-        "Select a node to view its parents", list(G.nodes), key="parent_select"
-    )
-    if st.button("Visualize Parents", key="visualize_parents"):
-        parents = get_all_parents(G, selected_node_parents)
-        st.write(f"All predecessors of {selected_node_parents}:")
-        st.write(parents)
-        fig_parents = visualize_subgraph(G, parents, selected_node_parents)
-        st.plotly_chart(fig_parents, use_container_width=True)
-
-    st.subheader("Child Nodes Visualization")
-    selected_node_children = st.selectbox(
-        "Select a node to view its children", list(G.nodes), key="child_select"
-    )
-    if st.button("Visualize Children", key="visualize_children"):
-        children = get_all_children(G, selected_node_children)
-        st.write(f"All descendants of {selected_node_children}:")
-        st.write(children)
-        fig_children = visualize_subgraph(G, children, selected_node_children)
-        st.plotly_chart(fig_children, use_container_width=True)
 
     # Calculate and display graph statistics
     st.subheader("Graph Statistics")
