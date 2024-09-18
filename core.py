@@ -356,39 +356,31 @@ import plotly.graph_objs as go
 import streamlit as st
 
 
-def visualize_graph_path(G: nx.DiGraph, source: str, target: str) -> go.Figure:
+def visualize_graph_path(
+    G: nx.DiGraph, source: str, target: str, path: list = None
+) -> go.Figure:
     """
-    Visualize the graph with a path highlighted from the selected source to target.
+    Visualize the path between two nodes in the graph.
 
     :param G: NetworkX DiGraph object
     :param source: Source node
     :param target: Target node
+    :param path: Optional pre-computed path to visualize
     :return: Plotly Figure object
     """
+    if path is None:
+        if not nx.has_path(G, source, target):
+            return None
+        path = nx.shortest_path(G, source, target)
 
-    # Check if path exists
-    if not nx.has_path(G, source, target):
-        st.warning("No path found between the selected source and target.")
-        return None
+    # Calculate positions for all nodes
+    pos = nx.spring_layout(G)
 
-    # Find the shortest path
-    path = nx.shortest_path(G, source, target)
-
-    # Create a copy of the graph
-    G_path = G.copy()
-
-    # Remove nodes not in the path
-    nodes_to_remove = set(G_path.nodes()) - set(path)
-    G_path.remove_nodes_from(nodes_to_remove)
-
-    # Create a layout for the path
-    pos = nx.spring_layout(G_path)
-
-    # Create edge trace for the path
-    edge_x, edge_y = [], []
-    for edge in G_path.edges():
-        x0, y0 = pos[edge[0]]
-        x1, y1 = pos[edge[1]]
+    edge_x = []
+    edge_y = []
+    for i in range(len(path) - 1):
+        x0, y0 = pos[path[i]]
+        x1, y1 = pos[path[i + 1]]
         edge_x.extend([x0, x1, None])
         edge_y.extend([y0, y1, None])
 
@@ -400,37 +392,98 @@ def visualize_graph_path(G: nx.DiGraph, source: str, target: str) -> go.Figure:
         mode="lines",
     )
 
-    # Create node trace for the path
-    node_x = [pos[node][0] for node in G_path.nodes()]
-    node_y = [pos[node][1] for node in G_path.nodes()]
+    node_x = []
+    node_y = []
+    for node in G.nodes():
+        x, y = pos[node]
+        node_x.append(x)
+        node_y.append(y)
 
     node_trace = go.Scatter(
         x=node_x,
         y=node_y,
-        mode="markers+text",
-        marker=dict(size=20, color="red"),
-        text=list(G_path.nodes()),
-        textposition="top center",
+        mode="markers",
         hoverinfo="text",
-        hovertext=[
-            f"{node}<br>Layer: {G.nodes[node]['layer_name']}" for node in G_path.nodes()
-        ],
+        marker=dict(
+            showscale=True,
+            colorscale="YlGnBu",
+            size=10,
+            color=[],
+            colorbar=dict(
+                thickness=15,
+                title="Node Connections",
+                xanchor="left",
+                titleside="right",
+            ),
+            line_width=2,
+        ),
     )
 
-    # Create the layout
-    layout = go.Layout(
-        title=f"Path from {source} to {target}: {' -> '.join(path)}",
-        showlegend=False,
-        hovermode="closest",
-        margin=dict(b=20, l=5, r=5, t=40),
-        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-    )
+    node_adjacencies = []
+    node_text = []
+    for node in G.nodes():
+        adjacencies = list(G.adj[node].keys())  # Use G.adj instead of G.adjacency()
+        node_adjacencies.append(len(adjacencies))
+        node_text.append(f"{node}<br># of connections: {len(adjacencies)}")
 
-    # Create the figure
-    fig = go.Figure(data=[edge_trace, node_trace], layout=layout)
+    node_trace.marker.color = node_adjacencies
+    node_trace.text = node_text
+
+    fig = go.Figure(
+        data=[edge_trace, node_trace],
+        layout=go.Layout(
+            title=f"Path from {source} to {target}",
+            titlefont_size=16,
+            showlegend=False,
+            hovermode="closest",
+            margin=dict(b=20, l=5, r=5, t=40),
+            annotations=[
+                dict(
+                    text="",
+                    showarrow=False,
+                    xref="paper",
+                    yref="paper",
+                    x=0.005,
+                    y=-0.002,
+                )
+            ],
+            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        ),
+    )
 
     return fig
+
+
+def find_critical_path(G: nx.DiGraph) -> list:
+    """
+    Find the critical path in the graph (longest path from any root to any leaf).
+
+    :param G: NetworkX DiGraph object
+    :return: List of nodes in the critical path
+    """
+    roots = [n for n, d in G.in_degree() if d == 0]
+    leaves = [n for n, d in G.out_degree() if d == 0]
+
+    def longest_path(source, target):
+        if source == target:
+            return [source]
+        paths = list(nx.all_simple_paths(G, source, target))
+        if not paths:
+            return []
+        return max(paths, key=len)
+
+    critical_path = []
+    max_length = 0
+
+    for root in roots:
+        for leaf in leaves:
+            path = longest_path(root, leaf)
+            if len(path) > max_length:
+                max_length = len(path)
+                critical_path = path
+
+    return critical_path
 
 
 def save_to_graphml(G: nx.DiGraph, filename: str) -> None:

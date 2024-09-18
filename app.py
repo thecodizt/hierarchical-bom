@@ -1,6 +1,7 @@
 import streamlit as st
 import csv
 import json
+import networkx as nx
 from core import (
     synthesize_graph,
     save_graph_to_json,
@@ -12,6 +13,7 @@ from core import (
     get_all_parents,
     get_all_children,
     visualize_subgraph,
+    find_critical_path,
 )
 
 st.title("Hierarchical BOM Synthesizer")
@@ -101,14 +103,46 @@ def main():
     with open("edges.csv") as f:
         st.download_button("Download Edges", f)
 
-    st.subheader("Path Visualization")
-    # use select box to select source and target node
-    source = st.selectbox("Source Node", list(G.nodes))
-    target = st.selectbox("Target Node", list(G.nodes))
-    if st.button("Visualize Path"):
-        fig_path = visualize_graph_path(G, source, target)
-        if fig_path is not None:
-            st.plotly_chart(fig_path, use_container_width=True)
+    st.subheader("Path Analysis")
+    source = st.selectbox("Source Node", list(G.nodes), key="source_node")
+    target = st.selectbox("Target Node", list(G.nodes), key="target_node")
+
+    if st.button("Analyze Path"):
+        if nx.has_path(G, source, target):
+            path = nx.shortest_path(G, source, target)
+            st.write(f"Shortest path from {source} to {target}:")
+            st.write(" -> ".join(path))
+            st.write(f"Path length: {len(path) - 1}")
+
+            # Calculate and display all paths
+            all_paths = list(nx.all_simple_paths(G, source, target))
+            st.write(f"Total number of paths: {len(all_paths)}")
+
+            # Find the longest path
+            longest_path = max(all_paths, key=len)
+            st.write(f"Longest path length: {len(longest_path) - 1}")
+
+            # Visualize the shortest path
+            fig_path = visualize_graph_path(G, source, target)
+            if fig_path is not None:
+                st.plotly_chart(fig_path, use_container_width=True)
+        else:
+            st.warning("No path exists between the selected nodes.")
+
+    # Add this new section for critical path analysis
+    st.subheader("Critical Path Analysis")
+    if st.button("Find Critical Path"):
+        critical_path = find_critical_path(G)
+        st.write("Critical Path (longest path from any root to any leaf):")
+        st.write(" -> ".join(critical_path))
+        st.write(f"Critical Path Length: {len(critical_path) - 1}")
+
+        # Visualize the critical path
+        fig_critical_path = visualize_graph_path(
+            G, critical_path[0], critical_path[-1], path=critical_path
+        )
+        if fig_critical_path is not None:
+            st.plotly_chart(fig_critical_path, use_container_width=True)
 
     st.subheader("GraphML Output")
     save_to_graphml(G, "synthesized_graph.graphml")
@@ -136,6 +170,17 @@ def main():
         st.write(children)
         fig_children = visualize_subgraph(G, children, selected_node_children)
         st.plotly_chart(fig_children, use_container_width=True)
+
+    # Calculate and display graph statistics
+    st.subheader("Graph Statistics")
+    st.write(f"Total Nodes: {G.number_of_nodes()}")
+    st.write(f"Total Edges: {G.number_of_edges()}")
+    st.write(
+        f"Average Children per Node: {G.number_of_edges() / G.number_of_nodes():.2f}"
+    )
+    st.write(f"Maximum Children: {max(dict(G.out_degree()).values())}")
+    st.write(f"Minimum Children: {min(dict(G.out_degree()).values())}")
+    st.write(f"Graph Depth: {max(nx.get_node_attributes(G, 'layer').values()) + 1}")
 
 
 if __name__ == "__main__":
