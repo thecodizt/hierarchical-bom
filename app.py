@@ -17,6 +17,34 @@ from core import (
     find_critical_path,
     analyze_node_properties,
 )
+import time
+from memory_profiler import memory_usage
+import functools
+import pandas as pd
+import plotly.graph_objects as go
+
+
+def profile(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        mem_before = memory_usage()[0]
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        mem_after = memory_usage()[0]
+        execution_time = end_time - start_time
+        memory_used = mem_after - mem_before
+        st.session_state.setdefault("profiling_results", []).append(
+            {
+                "function": func.__name__,
+                "execution_time": execution_time,
+                "memory_used": memory_used,
+            }
+        )
+        return result
+
+    return wrapper
+
 
 st.title("Hierarchical BOM Synthesizer")
 
@@ -48,6 +76,41 @@ def inputs():
     return total_nodes, total_layers, distribution, clear_cut_layer, layer_names
 
 
+@profile
+def generate_graph(
+    total_nodes,
+    total_layers,
+    distribution,
+    clear_cut_layer,
+    layer_names,
+    num_properties,
+    property_names,
+):
+    return synthesize_graph(
+        total_nodes,
+        total_layers,
+        distribution,
+        clear_cut_layer,
+        layer_names.split(",") if layer_names else None,
+        num_properties,
+        property_names,
+    )
+
+
+@profile
+def save_outputs(G):
+    save_graph_to_json(G, "synthesized_graph.json")
+    save_graph_to_csv(G, "nodes.csv", "edges.csv")
+    save_to_graphml(G, "synthesized_graph.graphml")
+
+
+@profile
+def visualize_graphs(G):
+    fig1 = visualize_graph(G)
+    fig = visualize_graph_hierarchical_plotly(G)
+    return fig1, fig
+
+
 def main():
     total_nodes, total_layers, distribution, clear_cut_layer, layer_names = inputs()
 
@@ -63,26 +126,21 @@ def main():
         property_names.append(prop_name)
 
     # Generate the graph
-    G = synthesize_graph(
+    G = generate_graph(
         total_nodes,
         total_layers,
         distribution,
         clear_cut_layer,
-        layer_names.split(",") if layer_names else None,
+        layer_names,
         num_properties,
         property_names,
     )
 
-    # Save to JSON
-    save_graph_to_json(G, "synthesized_graph.json")
-
-    # Save to CSV
-    save_graph_to_csv(G, "nodes.csv", "edges.csv")
+    # Save outputs
+    save_outputs(G)
 
     # Visualize the graph
-    fig1 = visualize_graph(G)
-
-    fig = visualize_graph_hierarchical_plotly(G)
+    fig1, fig = visualize_graphs(G)
 
     st.success("Graph synthesized successfully!")
 
@@ -199,7 +257,6 @@ def main():
             st.plotly_chart(fig_critical_path, use_container_width=True)
 
     st.subheader("GraphML Output")
-    save_to_graphml(G, "synthesized_graph.graphml")
     with open("synthesized_graph.graphml") as f:
         st.download_button("Download GraphML", f)
 
@@ -213,6 +270,37 @@ def main():
     st.write(f"Maximum Children: {max(dict(G.out_degree()).values())}")
     st.write(f"Minimum Children: {min(dict(G.out_degree()).values())}")
     st.write(f"Graph Depth: {max(nx.get_node_attributes(G, 'layer').values()) + 1}")
+
+    # Add profiling results at the end of the app
+    st.subheader("Profiling Results")
+    if "profiling_results" in st.session_state:
+        results_df = pd.DataFrame(st.session_state.profiling_results)
+        st.dataframe(results_df)
+
+        # Create a bar chart for execution times
+        fig_time = go.Figure(
+            data=[go.Bar(x=results_df["function"], y=results_df["execution_time"])]
+        )
+        fig_time.update_layout(
+            title="Execution Time by Function",
+            xaxis_title="Function",
+            yaxis_title="Time (seconds)",
+        )
+        st.plotly_chart(fig_time)
+
+        # Create a bar chart for memory usage
+        fig_memory = go.Figure(
+            data=[go.Bar(x=results_df["function"], y=results_df["memory_used"])]
+        )
+        fig_memory.update_layout(
+            title="Memory Usage by Function",
+            xaxis_title="Function",
+            yaxis_title="Memory (MB)",
+        )
+        st.plotly_chart(fig_memory)
+
+    # Clear profiling results for the next run
+    st.session_state.profiling_results = []
 
 
 if __name__ == "__main__":

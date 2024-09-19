@@ -4,133 +4,130 @@ Layer1 1,Layer2 2
 Layer1 1,Layer2 3
 Layer1 1,Layer2 4
 Layer1 1,Layer2 5
-Layer2 1,Layer3 1
-Layer2 2,Layer3 2
-Layer2 2,Layer3 3
-Layer2 2,Layer3 5
-Layer2 4,Layer3 4
-Layer2 5,Layer3 6
-Layer3 1,Layer4 5
-Layer3 2,Layer4 1
-Layer3 5,Layer4 2
-Layer3 5,Layer4 4
-Layer3 6,Layer4 3
-Layer3 6,Layer4 6
-Layer4 1,Layer5 2
-Layer4 1,Layer5 4
-Layer4 1,Layer5 7
-Layer4 2,Layer5 5
-Layer4 3,Layer5 3
-Layer4 4,Layer5 6
+Layer2 1,Layer3 4
+Layer2 3,Layer3 2
+Layer2 3,Layer3 3
+Layer2 4,Layer3 5
+Layer2 4,Layer3 6
+Layer2 5,Layer3 1
+Layer3 3,Layer4 3
+Layer3 5,Layer4 5
+Layer3 5,Layer4 6
+Layer3 6,Layer4 1
+Layer3 6,Layer4 2
+Layer3 6,Layer4 4
+Layer4 1,Layer5 6
+Layer4 2,Layer5 7
+Layer4 3,Layer5 5
+Layer4 4,Layer5 3
+Layer4 4,Layer5 4
+Layer4 5,Layer5 2
 Layer4 6,Layer5 1
-Layer5 1,Layer6 4
-Layer5 2,Layer6 8
-Layer5 4,Layer6 1
-Layer5 4,Layer6 6
-Layer5 5,Layer6 2
-Layer5 5,Layer6 3
-Layer5 5,Layer6 7
-Layer5 6,Layer6 5
+Layer5 1,Layer6 1
+Layer5 1,Layer6 2
+Layer5 3,Layer6 4
+Layer5 3,Layer6 5
+Layer5 3,Layer6 7
+Layer5 4,Layer6 3
+Layer5 4,Layer6 5
+Layer5 5,Layer6 6
+Layer5 6,Layer6 3
+Layer5 6,Layer6 4
+Layer5 6,Layer6 6
 Layer5 6,Layer6 7
-Layer5 7,Layer6 3
-Layer5 7,Layer6 5
-Layer6 1,Layer7 8
-Layer6 2,Layer7 2
-Layer6 3,Layer7 7
-Layer6 4,Layer7 3
-Layer6 4,Layer7 4
-Layer6 4,Layer7 6
-Layer6 5,Layer7 8
-Layer6 7,Layer7 3
-Layer6 8,Layer7 1
-Layer6 8,Layer7 5
-Layer7 1,Layer8 2
-Layer7 1,Layer8 6
-Layer7 1,Layer8 9
-Layer7 2,Layer8 7
-Layer7 2,Layer8 9
+Layer5 7,Layer6 2
+Layer5 7,Layer6 8
+Layer6 1,Layer7 2
+Layer6 3,Layer7 4
+Layer6 3,Layer7 8
+Layer6 4,Layer7 7
+Layer6 5,Layer7 3
+Layer6 5,Layer7 5
+Layer6 6,Layer7 1
+Layer6 6,Layer7 6
+Layer6 6,Layer7 8
+Layer6 7,Layer7 7
+Layer6 8,Layer7 3
+Layer6 8,Layer7 4
+Layer7 2,Layer8 3
+Layer7 3,Layer8 1
 Layer7 3,Layer8 5
-Layer7 4,Layer8 3
-Layer7 5,Layer8 4
+Layer7 4,Layer8 2
+Layer7 5,Layer8 6
+Layer7 5,Layer8 9
+Layer7 6,Layer8 2
 Layer7 6,Layer8 4
 Layer7 6,Layer8 7
-Layer7 7,Layer8 1
-Layer7 7,Layer8 8
-Layer7 8,Layer8 2
-Layer7 8,Layer8 8
+Layer7 6,Layer8 8
 Layer8 1,Layer9 4
-Layer8 1,Layer9 5
-Layer8 3,Layer9 3
-Layer8 3,Layer9 6
-Layer8 4,Layer9 7
+Layer8 2,Layer9 1
+Layer8 3,Layer9 7
+Layer8 4,Layer9 1
+Layer8 4,Layer9 8
 Layer8 4,Layer9 10
-Layer8 5,Layer9 2
-Layer8 5,Layer9 3
-Layer8 5,Layer9 7
-Layer8 6,Layer9 9
-Layer8 6,Layer9 10
-Layer8 8,Layer9 1
-Layer8 8,Layer9 8
-Layer8 9,Layer9 1
+Layer8 5,Layer9 9
+Layer8 6,Layer9 6
+Layer8 6,Layer9 8
+Layer8 7,Layer9 2
+Layer8 7,Layer9 3
+Layer8 8,Layer9 5
+Layer8 9,Layer9 4
 Layer8 9,Layer9 5
-Layer8 9,Layer9 9
-Layer9 1,Layer10 1
-Layer9 1,Layer10 3
-Layer9 2,Layer10 3
-Layer9 2,Layer10 9
-Layer9 2,Layer10 10
+Layer9 2,Layer10 5
+Layer9 2,Layer10 11
+Layer9 3,Layer10 3
+Layer9 3,Layer10 5
+Layer9 3,Layer10 10
 Layer9 3,Layer10 11
-Layer9 4,Layer10 7
-Layer9 5,Layer10 2
-Layer9 6,Layer10 4
-Layer9 6,Layer10 7
-Layer9 6,Layer10 10
-Layer9 7,Layer10 6
-Layer9 7,Layer10 8
-Layer9 8,Layer10 2
+Layer9 4,Layer10 2
+Layer9 4,Layer10 10
+Layer9 6,Layer10 9
+Layer9 7,Layer10 4
+Layer9 8,Layer10 1
+Layer9 8,Layer10 6
+Layer9 8,Layer10 7
 Layer9 8,Layer10 8
-Layer9 8,Layer10 9
-Layer9 9,Layer10 5
-Layer10 1,Layer11 6
-Layer10 2,Layer11 3
+Layer9 9,Layer10 3
+Layer9 10,Layer10 9
 Layer10 2,Layer11 5
-Layer10 2,Layer11 11
-Layer10 3,Layer11 4
-Layer10 3,Layer11 10
-Layer10 5,Layer11 1
-Layer10 5,Layer11 8
-Layer10 5,Layer11 9
-Layer10 6,Layer11 12
+Layer10 2,Layer11 8
+Layer10 3,Layer11 6
+Layer10 4,Layer11 7
+Layer10 4,Layer11 8
+Layer10 4,Layer11 11
+Layer10 5,Layer11 12
+Layer10 6,Layer11 1
+Layer10 6,Layer11 2
 Layer10 7,Layer11 3
-Layer10 7,Layer11 9
-Layer10 8,Layer11 6
-Layer10 10,Layer11 2
-Layer10 11,Layer11 7
-Layer10 11,Layer11 12
-Layer11 1,Layer12 12 3
-Layer11 1,Layer12 12 15
+Layer10 7,Layer11 6
+Layer10 7,Layer11 10
+Layer10 8,Layer11 1
+Layer10 10,Layer11 4
+Layer10 11,Layer11 9
+Layer11 1,Layer12 12 6
+Layer11 1,Layer12 12 9
+Layer11 1,Layer12 12 11
+Layer11 1,Layer12 12 14
 Layer11 2,Layer12 12 2
-Layer11 2,Layer12 12 14
-Layer11 3,Layer12 12 4
-Layer11 4,Layer12 12 5
-Layer11 4,Layer12 12 8
+Layer11 2,Layer12 12 6
+Layer11 2,Layer12 12 11
+Layer11 3,Layer12 12 10
+Layer11 4,Layer12 12 4
+Layer11 4,Layer12 12 13
 Layer11 4,Layer12 12 15
-Layer11 4,Layer12 12 16
 Layer11 5,Layer12 12 3
-Layer11 5,Layer12 12 13
+Layer11 5,Layer12 12 10
+Layer11 5,Layer12 12 14
 Layer11 5,Layer12 12 16
-Layer11 6,Layer12 12 9
-Layer11 7,Layer12 12 2
-Layer11 7,Layer12 12 4
+Layer11 6,Layer12 12 2
+Layer11 7,Layer12 12 5
+Layer11 7,Layer12 12 12
+Layer11 8,Layer12 12 1
 Layer11 8,Layer12 12 8
-Layer11 8,Layer12 12 12
-Layer11 9,Layer12 12 7
-Layer11 9,Layer12 12 11
-Layer11 10,Layer12 12 17
-Layer11 11,Layer12 12 6
-Layer11 11,Layer12 12 9
-Layer11 11,Layer12 12 10
-Layer11 11,Layer12 12 17
-Layer11 12,Layer12 12 1
-Layer11 12,Layer12 12 5
-Layer11 12,Layer12 12 12
+Layer11 9,Layer12 12 13
+Layer11 10,Layer12 12 7
+Layer11 10,Layer12 12 15
+Layer11 11,Layer12 12 5
+Layer11 11,Layer12 12 12
+Layer11 12,Layer12 12 9
+Layer11 12,Layer12 12 17
