@@ -109,6 +109,7 @@ def visualize_graphs(G):
     fig1 = visualize_graph(G)
     fig = visualize_graph_hierarchical_plotly(G)
     return fig1, fig
+    # pass
 
 
 def main():
@@ -145,11 +146,11 @@ def main():
     st.success("Graph synthesized successfully!")
 
     st.subheader("Graph Visualization")
-    st.plotly_chart(fig1, use_container_width=True)
+    # st.plotly_chart(fig1, use_container_width=True)
 
     st.subheader("Hierarchical Graph Visualization")
     # st.image("graph_visualization_hierarchical.png")
-    st.plotly_chart(fig, use_container_width=True)
+    # st.plotly_chart(fig, use_container_width=True)
 
     st.subheader("JSON Output")
     with open("synthesized_graph.json") as f:
@@ -181,9 +182,9 @@ def main():
             st.write(f"Longest path length: {len(longest_path) - 1}")
 
             # Visualize the shortest path
-            fig_path = visualize_graph_path(G, source, target)
-            if fig_path is not None:
-                st.plotly_chart(fig_path, use_container_width=True)
+            # fig_path = visualize_graph_path(G, source, target)
+            # if fig_path is not None:
+            # st.plotly_chart(fig_path, use_container_width=True)
         else:
             st.warning("No path exists between the selected nodes.")
 
@@ -200,8 +201,8 @@ def main():
     )
     if size_property == "None":
         size_property = None
-    fig_property = visualize_graph_hierarchical_plotly(G, size_property)
-    st.plotly_chart(fig_property, use_container_width=True)
+    # fig_property = visualize_graph_hierarchical_plotly(G, size_property)
+    # st.plotly_chart(fig_property, use_container_width=True)
 
     st.subheader("Parent Nodes Visualization")
     selected_node_parents = st.selectbox(
@@ -250,11 +251,11 @@ def main():
         st.write(f"Critical Path Length: {len(critical_path) - 1}")
 
         # Visualize the critical path
-        fig_critical_path = visualize_graph_path(
-            G, critical_path[0], critical_path[-1], path=critical_path
-        )
-        if fig_critical_path is not None:
-            st.plotly_chart(fig_critical_path, use_container_width=True)
+        # fig_critical_path = visualize_graph_path(
+        # G, critical_path[0], critical_path[-1], path=critical_path
+        # )
+        # if fig_critical_path is not None:
+        # st.plotly_chart(fig_critical_path, use_container_width=True)
 
     st.subheader("GraphML Output")
     with open("synthesized_graph.graphml") as f:
